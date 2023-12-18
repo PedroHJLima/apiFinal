@@ -1,6 +1,8 @@
 // index.js
 
 /*  EXPRESS */
+const axios = require('axios');
+
 
 const express = require('express');
 const app = express();
@@ -40,11 +42,21 @@ app.set('view engine', 'ejs');
 app.get('/success', (req, res) => res.send(userProfile));
 app.get('/error', (req, res) => res.send("error logging in"));
 
-app.post('/logout', function(req, res, next){
-  req.logout(function(err) {
-    if (err) { return next(err); }
-    res.redirect('/');
-  });
+app.get('/logout', function(req, res){
+  console.log(req.user.accessToken)
+  const accessToken = req.user.accessToken; // Substitua pelo campo correto do seu usuário
+
+  axios.post(`https://accounts.google.com/o/oauth2/revoke?token=${accessToken}`)
+      .then(response => {
+          // Lógica para tratar a resposta (não é necessário agir sobre ela)
+          req.logout();
+          res.redirect('/');
+      })
+      .catch(error => {
+          // Lógica para tratar erros
+          console.error(error);
+          res.redirect('/');
+      });
 });
 
 passport.serializeUser(function(user, cb) {

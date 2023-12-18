@@ -7,12 +7,16 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"> <!-- load bootstrap css -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> <!-- load fontawesome -->
       <style>
-          body{ padding-top:70px; }
+          body{ padding-top:0; }
+          .livroClass{display: inline-block; margin: 40px; padding: 20px; background-color: rgb(204, 204, 204); border: 2px solid black;}
+          #livraria {display: flex; justify-content: center; align-items: center; flex-direction: column; flex-wrap: wrap; }
+          #nav{display: flex; border-bottom: 1px solid rgba(54, 65, 75, 0.397); padding: 10px; margin-bottom: 10px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);}
       </style>
   </head>
   <body>
-    <button id="btnLogoff" class="btn btn-danger" onclick="realizarLogoff()">Logoff</button>
-
+    <div id="nav">
+      <button id="btnLogoff" class="btn btn-danger" onclick="realizarLogoff()">Logoff</button>
+    </div>
     <div class="container">
         <div class="jumbotron">
           <h1 class="text-primary text-center"><span class="fa fa-user"></span> Profile Information</h1>
@@ -113,6 +117,7 @@
       } else {
         livros.forEach(livro => {
           const livroDiv = document.createElement('div');
+          livroDiv.classList.add('livroClass');
           livroDiv.innerHTML = `<p>${livro.isbn} - ${livro.nome} - ${livro.retirado ? 'Retirado' : 'Disponível'}</p>`;
 
           const acaoButton = document.createElement('button');

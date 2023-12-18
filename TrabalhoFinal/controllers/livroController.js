@@ -55,25 +55,29 @@ const adicionarLivros = (req, res, next) => {
     try {
       // Verifica se o livro está disponível para retirada
       const livro = await knex('livros').where('isbn', livroId).first();
+      //verificar se o usuário não tem um livro
+      const usuario = await knex('usuarios').where('id', usuarioId).first();
       if (!livro) {
         return res.send(new errors.BadRequestError('Livro não encontrado'));
       }
-  
+      
       if (!livro.retirado) {
-        // Atualiza o livro para indicar que foi retirado
-        await knex('livros').where('isbn', livroId).update({ retirado: true, locatario : usuarioId});
-  
-        // Calcula a data de devolução (7 dias a partir de hoje)
-        const dataDevolucao = new Date();
-        dataDevolucao.setDate(dataDevolucao.getDate() + 7);
-  
-        // Atualiza o ISBN do usuário e a data de devolução
-        await knex('usuarios').where('id', usuarioId).update({
-          livro:livroId,
-          data_devolucao: dataDevolucao,
-        });
-  
-        res.send('Livro retirado com sucesso. Data de devolução: ' + dataDevolucao.toLocaleDateString());
+        if(!usuario.livro){
+          // Atualiza o livro para indicar que foi retirado
+          await knex('livros').where('isbn', livroId).update({ retirado: true, locatario : usuarioId});
+    
+          // Calcula a data de devolução (7 dias a partir de hoje)
+          const dataDevolucao = new Date();
+          dataDevolucao.setDate(dataDevolucao.getDate() + 7);
+    
+          // Atualiza o ISBN do usuário e a data de devolução
+          await knex('usuarios').where('id', usuarioId).update({
+            livro:livroId,
+            data_devolucao: dataDevolucao,
+          });
+    
+          res.send('Livro retirado com sucesso. Data de devolução: ' + dataDevolucao.toLocaleDateString());
+        }else{res.send(new errors.BadRequestError('Usuário já retirou um livro.'))}
       } else {
         res.send(new errors.BadRequestError('Livro já retirado.'));
       }
