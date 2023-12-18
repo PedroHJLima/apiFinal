@@ -1,0 +1,177 @@
+<!-- views/success.ejs -->
+
+<!doctype html>
+<html>
+  <head>
+    <title>Livraria</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"> <!-- load bootstrap css -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"> <!-- load fontawesome -->
+      <style>
+          body{ padding-top:70px; }
+      </style>
+  </head>
+  <body>
+    <button id="btnLogoff" class="btn btn-danger" onclick="realizarLogoff()">Logoff</button>
+
+    <div class="container">
+        <div class="jumbotron">
+          <h1 class="text-primary text-center"><span class="fa fa-user"></span> Profile Information</h1>
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="well" id="userInfo">
+                <p>
+                  <strong id="userId"><%= user.id %></strong><br>
+                  <strong id="userEmail"><%= user.emails[0].value %></strong><br>
+                  <strong id="userNome"><%= user.displayName %></strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="livraria">
+        <h1>Livraria Lima</h1>
+
+        <h2>Livros disponíveis:</h2>
+        <div id="livrosContainer"></div>
+
+        <h2>Livros retirados por você:</h2>
+        <div id="livrosRetiradosContainer"></div>
+      </div>
+
+    <script>
+
+      
+        document.addEventListener('DOMContentLoaded', function () {
+        //Busca informação de usuário
+
+        const userId = document.getElementById('userId').innerHTML;
+        const userEmail = document.getElementById('userEmail').innerHTML;
+        const userName = document.getElementById('userNome').innerHTML;
+
+
+ 
+
+          // Cria um objeto com as informações do usuário
+          const userData = {
+            id: userId,
+            email: userEmail,
+            nome: userName
+          };
+          corpo = JSON.stringify(userData);
+          console.log(corpo);
+          // Envia os dados do usuário como JSON para o servidor usando fetch
+          fetch('http://localhost:8001/usuarios', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+          })
+          .then(response => response.json())
+          .then(data => {
+            // Faça algo com os dados de resposta, se necessário
+            console.log('Dados enviados com sucesso:', data);
+          })
+          .catch(error => console.error('Erro ao enviar dados:', error));
+        
+      });
+
+      function realizarLogoff() {
+        console.log('Logoff realizado.');
+
+        // Redirecione o usuário para a página de login ou outra página desejada
+        window.location.href = '/logout';
+      }
+
+      function buscarLivros() {
+        // Faz uma solicitação AJAX para a API
+        fetch(`http://localhost:8001/livros/disponiveis`)
+            .then(response => response.json())
+            .then(data => exibirLivros(data,'livrosContainer'))
+            .catch(error => console.error('Erro ao buscar livros:', error));
+      }
+
+      function buscarLivrosRetirados() {
+          const userId = document.getElementById('userId').innerHTML;
+          console.log(userId)
+          fetch(`http://localhost:8001/livros/retirados/${userId}`)
+              .then(response => response.json())
+              .then(data => exibirLivros(data,'livrosRetiradosContainer'))
+              .catch(error => console.error('Erro ao buscar livros:', error));
+      }
+
+      function exibirLivros(livros, container) {
+      const livrosContainer = document.getElementById(container);
+      const userIdElement = document.getElementById("userId");
+      const userId = userIdElement.textContent.trim();
+      
+      livrosContainer.innerHTML = '';
+
+      if (livros.length === 0) {
+        livrosContainer.innerHTML = '<p>Nenhum livro nesta lista!</p>';
+      } else {
+        livros.forEach(livro => {
+          const livroDiv = document.createElement('div');
+          livroDiv.innerHTML = `<p>${livro.isbn} - ${livro.nome} - ${livro.retirado ? 'Retirado' : 'Disponível'}</p>`;
+
+          const acaoButton = document.createElement('button');
+          if (livro.retirado) {
+            acaoButton.textContent = 'Devolver';
+            acaoButton.onclick = () => devolverLivro(livro.isbn, userId);
+          } else {
+            acaoButton.textContent = 'Retirar';
+            acaoButton.onclick = () => retirarLivro(livro.isbn, userId);
+          }
+
+          livroDiv.appendChild(acaoButton);
+          livrosContainer.appendChild(livroDiv);
+        });
+      }
+    }
+
+          
+
+      function retirarLivro(livroIsbn,userID) {
+            console.log(userID)
+            // Faz uma solicitação AJAX para a API para marcar o livro como retirado
+            fetch(`http://localhost:8001/livros/${livroIsbn}/retirar/${userID}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // Pode enviar dados do usuário aqui, se necessário
+                // body: JSON.stringify({ usuarioId: seuUsuarioId }),
+            })
+            .then(response => {
+              console.log('Resposta da API:', response);
+              carregandoPagina();
+              return response.json();})
+        }
+
+        function devolverLivro(livroIsbn,userID) {
+            // Faz uma solicitação AJAX para a API para marcar o livro como retirado
+            fetch(`http://localhost:8001/livros/${livroIsbn}/devolver/${userID}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // Pode enviar dados do usuário aqui, se necessário
+                // body: JSON.stringify({ usuarioId: seuUsuarioId }),
+            })
+            .then(response => {
+              console.log('Resposta da API:', response);
+              carregandoPagina();
+              return response.json();
+            })
+        }
+        
+        function carregandoPagina() {
+          buscarLivros();
+          buscarLivrosRetirados();
+        }
+        
+        window.onload = carregandoPagina; 
+    </script>
+  </body>
+</html> 
